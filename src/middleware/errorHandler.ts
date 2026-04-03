@@ -29,6 +29,7 @@ export function errorHandler(
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
+      statusCode: err.statusCode,
       error: {
         code: err.code,
         message: err.message,
@@ -40,6 +41,7 @@ export function errorHandler(
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       success: false,
+      statusCode: 400,
       error: {
         code: 'VALIDATION_ERROR',
         message: err.message,
@@ -51,6 +53,7 @@ export function errorHandler(
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({
       success: false,
+      statusCode: 401,
       error: {
         code: 'UNAUTHORIZED',
         message: '认证失败，请重新登录',
@@ -61,6 +64,7 @@ export function errorHandler(
 
   return res.status(500).json({
     success: false,
+    statusCode: 500,
     error: {
       code: 'INTERNAL_ERROR',
       message: process.env.NODE_ENV === 'production' ? '服务器内部错误' : err.message,
@@ -72,6 +76,7 @@ export function errorHandler(
 export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
   res.status(404).json({
     success: false,
+    statusCode: 404,
     error: {
       code: 'NOT_FOUND',
       message: `路由 ${req.method} ${req.path} 不存在`,

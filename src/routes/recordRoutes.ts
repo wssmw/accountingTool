@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', recordController.getRecords);
+router.get('/grouped-by-date', recordController.getRecordsGroupedByDate);
 router.post('/', validateRequest(createRecordSchema), recordController.createRecord);
 router.get('/:id', recordController.getRecordById);
 router.put('/:id', validateRequest(updateRecordSchema), recordController.updateRecord);

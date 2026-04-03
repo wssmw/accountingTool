@@ -1,5 +1,6 @@
 import prisma from '../database/prisma';
 import { AppError } from '../middleware/errorHandler';
+import { formatDate } from '../utils/helpers';
 
 export interface RecordQueryParams {
   page?: number;
@@ -9,6 +10,8 @@ export interface RecordQueryParams {
   endDate?: string;
   person?: 'husband' | 'wife';
 }
+
+export interface GroupedRecordQueryParams extends RecordQueryParams {}
 
 export class RecordService {
   async createRecord(
@@ -119,6 +122,114 @@ export class RecordService {
 
     return {
       records,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getRecordsGroupedByDate(userId: string, params: GroupedRecordQueryParams) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError('USER_NOT_FOUND', '用户不存在', 404);
+    }
+
+    if (!user.coupleId) {
+      throw new AppError('NOT_IN_COUPLE', '用户未加入家庭', 400);
+    }
+
+    const { page = 1, limit = 20, type, startDate, endDate, person } = params;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      coupleId: user.coupleId,
+      deletedAt: null,
+    };
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (person) {
+      where.person = person;
+    }
+
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.date.lte = new Date(endDate);
+      }
+    }
+
+    const [records, total] = await Promise.all([
+      prisma.record.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+      }),
+      prisma.record.count({ where }),
+    ]);
+
+    const groupedMap = new Map<
+      string,
+      {
+        date: string;
+        totalIncome: number;
+        totalExpense: number;
+        balance: number;
+        records: typeof records;
+      }
+    >();
+
+    for (const record of records) {
+      const day = formatDate(new Date(record.date));
+
+      if (!groupedMap.has(day)) {
+        groupedMap.set(day, {
+          date: day,
+          totalIncome: 0,
+          totalExpense: 0,
+          balance: 0,
+          records: [],
+        });
+      }
+
+      const dayGroup = groupedMap.get(day)!;
+      const amount = Number(record.amount);
+
+      if (record.type === 'income') {
+        dayGroup.totalIncome += amount;
+      } else {
+        dayGroup.totalExpense += amount;
+      }
+
+      dayGroup.balance = dayGroup.totalIncome - dayGroup.totalExpense;
+      dayGroup.records.push(record);
+    }
+
+    const list = Array.from(groupedMap.values());
+
+    return {
+      list,
       pagination: {
         page,
         limit,

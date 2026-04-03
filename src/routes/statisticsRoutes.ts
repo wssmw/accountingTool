@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get('/home-overview', statisticsController.getHomeOverview);
 router.get('/summary', statisticsController.getSummary);
 router.get('/by-category', statisticsController.getByCategory);
 router.get('/by-person', statisticsController.getByPerson);

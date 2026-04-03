@@ -13,6 +13,7 @@ export class AuthController {
 
       res.status(201).json({
         success: true,
+        statusCode: 201,
         data: result,
         message: '注册成功',
         timestamp: getCurrentTimestamp(),
@@ -27,8 +28,9 @@ export class AuthController {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         message: '登录成功',
         timestamp: getCurrentTimestamp(),
@@ -44,8 +46,9 @@ export class AuthController {
 
       await authService.logout(userId);
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         message: '登出成功',
         timestamp: getCurrentTimestamp(),
       });
@@ -60,8 +63,9 @@ export class AuthController {
 
       const user = await authService.getCurrentUser(userId);
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: user,
         timestamp: getCurrentTimestamp(),
       });
@@ -80,8 +84,9 @@ export class AuthController {
 
       const result = await authService.refreshAccessToken(refreshToken);
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         message: 'Access Token 刷新成功',
         timestamp: getCurrentTimestamp(),

@@ -3,6 +3,61 @@ import { AppError } from '../middleware/errorHandler';
 import { Prisma } from '@prisma/client';
 
 export class StatisticsService {
+  async getHomeOverview(userId: string, recentLimit: number = 10) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError('USER_NOT_FOUND', '用户不存在', 404);
+    }
+
+    if (!user.coupleId) {
+      throw new AppError('NOT_IN_COUPLE', '用户未加入家庭', 400);
+    }
+
+    const where: any = {
+      coupleId: user.coupleId,
+      deletedAt: null,
+    };
+
+    const [incomeResult, expenseResult, recentRecords] = await Promise.all([
+      prisma.record.aggregate({
+        where: { ...where, type: 'income' },
+        _sum: { amount: true },
+      }),
+      prisma.record.aggregate({
+        where: { ...where, type: 'expense' },
+        _sum: { amount: true },
+      }),
+      prisma.record.findMany({
+        where,
+        take: recentLimit,
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const totalIncome = Number(incomeResult._sum.amount) || 0;
+    const totalExpense = Number(expenseResult._sum.amount) || 0;
+    const balance = totalIncome - totalExpense;
+
+    return {
+      balance,
+      totalIncome,
+      totalExpense,
+      recentRecords,
+    };
+  }
+
   async getSummary(userId: string, startDate?: string, endDate?: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

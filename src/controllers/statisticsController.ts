@@ -4,6 +4,24 @@ import { statisticsService } from '../services/statisticsService';
 import { getCurrentTimestamp } from '../utils/helpers';
 
 export class StatisticsController {
+  async getHomeOverview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+      const result = await statisticsService.getHomeOverview(userId, limit);
+
+      res.status(200).json({
+        success: true,
+        statusCode: 200,
+        data: result,
+        timestamp: getCurrentTimestamp(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getSummary(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
@@ -11,12 +29,13 @@ export class StatisticsController {
 
       const result = await statisticsService.getSummary(
         userId,
-        start_date as string,
-        end_date as string
+        start_date as string | undefined,
+        end_date as string | undefined
       );
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         timestamp: getCurrentTimestamp(),
       });
@@ -28,16 +47,17 @@ export class StatisticsController {
   async getByCategory(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const { start_date, end_date } = req.query;
+      const { start_date, end_date, type } = req.query;
 
       const result = await statisticsService.getByCategory(
         userId,
-        start_date as string,
-        end_date as string
+        start_date as string | undefined,
+        end_date as string | undefined
       );
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         timestamp: getCurrentTimestamp(),
       });
@@ -49,16 +69,17 @@ export class StatisticsController {
   async getByPerson(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const { start_date, end_date } = req.query;
+      const { start_date, end_date, type } = req.query;
 
       const result = await statisticsService.getByPerson(
         userId,
-        start_date as string,
-        end_date as string
+        start_date as string | undefined,
+        end_date as string | undefined
       );
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         timestamp: getCurrentTimestamp(),
       });
@@ -70,15 +91,16 @@ export class StatisticsController {
   async getByMonth(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const { year } = req.query;
+      const { year, type } = req.query;
 
       const result = await statisticsService.getByMonth(
         userId,
         year ? parseInt(year as string) : undefined
       );
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         timestamp: getCurrentTimestamp(),
       });

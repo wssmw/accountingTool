@@ -13,6 +13,7 @@ export class CoupleController {
 
       res.status(201).json({
         success: true,
+        statusCode: 201,
         data: result,
         message: '家庭创建成功',
         timestamp: getCurrentTimestamp(),
@@ -29,8 +30,9 @@ export class CoupleController {
 
       const result = await coupleService.joinCouple(userId, inviteCode);
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         message: '加入家庭成功',
         timestamp: getCurrentTimestamp(),
@@ -46,8 +48,9 @@ export class CoupleController {
 
       const result = await coupleService.getCoupleInfo(userId);
 
-      res.json({
+      res.status(200).json({
         success: true,
+        statusCode: 200,
         data: result,
         timestamp: getCurrentTimestamp(),
       });
